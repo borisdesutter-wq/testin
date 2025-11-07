@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Factory Pods Launcher (NFC POC)</title>
+<style>
+  body{background:#0b0f14;color:#e6eef6;font-family:system-ui;margin:0}
+  header{position:sticky;top:0;background:#0b0f14ee;padding:10px;border-bottom:1px solid #1e2a38}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input[type="search"]{flex:1;height:40px;border-radius:10px;border:1px solid #2a3a4f;background:#111825;color:#e6eef6;padding:0 10px}
+  .line{margin:12px}
+  .line h2{font:700 14px system-ui;color:#9fb0c0;text-transform:uppercase;margin:8px 2px}
+  .grid{display:grid;gap:12px;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);overflow-x:auto}
+  .tile{display:flex;flex-direction:column;justify-content:center;min-height:88px;background:#131a22;border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.35);padding:12px;color:#e6eef6;text-decoration:none}
+  .t-name{font-size:18px;font-weight:800}
+  .t-old{font-size:12px;color:#9fb0c0;opacity:.75;margin-top:2px}
+  .t-sub,.t-meta,.t-dev,.creds{display:none}
+  .t-meta,.t-dev,.creds{font-size:11px;color:#93a1b0;margin-top:4px}
+  .creds .mono{font-family:ui-monospace,Menlo,Consolas,monospace;background:#0d131a;color:#cfe4ff;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:2px 6px}
+  .urlrow{display:none;margin-top:8px;gap:6px;align-items:center}
+  .url{flex:1;background:#0d131a;color:#cfe4ff;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;overflow:auto}
+  .copy{height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:#1a2431;color:#e6eef6}
+  .divider{height:1px;background:rgba(255,255,255,.08);margin:16px 12px;}
+  .showurls:checked ~ main .urlrow{display:flex}
+  .showdetails:checked ~ main .t-sub,
+  .showdetails:checked ~ main .t-meta,
+  .showdetails:checked ~ main .t-dev,
+  .showdetails:checked ~ main .creds{display:block}
+
+  /* --- NFC additions --- */
+  .nfcrow{display:none;gap:8px;align-items:center;margin-top:8px}
+  .showdetails:checked ~ main .nfcrow{display:flex} /* only show when details are on */
+  .nfcbtn{height:30px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:#223046;color:#e6eef6;cursor:pointer}
+  .nfcstatus{font-size:12px;opacity:.9}
+  .badge{font-size:12px;border:1px solid #2a3a4f;border-radius:999px;padding:4px 8px;background:#111825}
+  .badge.ok{color:#9ff59f}
+  .badge.warn{color:#ffd27a}
+  .badge.err{color:#ff9b9b}
+</style>
+</head>
+<body>
+<input id="showurls" class="showurls" type="checkbox" style="display:none">
+<input id="showdetails" class="showdetails" type="checkbox" style="display:none">
+
+<header class="row">
+  <input id="q" type="search" placeholder="Zoeken: L1, POD, station, tablet, printer…" autocomplete="off" />
+  <label class="switch"><input type="checkbox" id="switchDetails"> ℹ️ Toon details</label>
+  <label class="switch"><input type="checkbox" id="switchUrls"> 🔗 URL's</label>
+  <span id="nfcBadge" class="badge warn" title="Web NFC status">NFC: checking…</span>
+</header>
+
+<main id="app">
+  <!-- CONTENT: copied from your pod.html (shortened here for brevity in this POC).
+       Keep the same <section>/<div class="grid">/<a class="tile">… structure.
+       I left your original first section below as-is; paste the rest of your tiles here. -->
+  <section class="line">
+    <div class="grid">
+
+      <!-- Example tile (your original content); JS will inject an NFC row here -->
+      <a class="tile" href="relay.html?user=three&target=https%3A%2F%2Fff-dm-prod.execution.eu20-prod.web.dmc.cloud.sap%2Fcp.portal%2Fsite%23DMEOrderPOD-Display%3FPOD_ID%3D1010_DEFAULT_ORDER_POD_HU%26%2F%3F%3D%26WORKCENTER%3DL1HU%26SFCSTATUS%3D401%2C403%2C402%26user%3Dthree"
+         data-user="three" target="_self"
+         data-hay="l1 | l1 | hu | l1 - palletizing | line hu pod | line hu pod | l1hu | 1 | pr02524 | ol1hu | ffoperator1010.three@colruytgroup.com">
+        <span class="t-name">L1 - Palletizing</span>
+        <span class="t-old">Line HU POD</span>
+        <div class="t-sub">POD: Line HU POD</div>
+        <div class="t-meta">Groep: L1 • WC: L1HU</div>
+        <div class="t-dev">Tablet: 1 • IW printer: PR02524 • SAP printer: OL1HU</div>
+        <div class="creds"><span class="mono">Operator</span></div>
+        <div class="urlrow row">
+          <div class="url">https://ff-dm-prod.execution.eu20-prod.web.dmc.cloud.sap/cp.portal/site#DMEOrderPOD-Display?POD_ID=1010_DEFAULT_ORDER_POD_HU&amp;/?=&amp;WORKCENTER=L1HU&amp;SFCSTATUS=401,403,402&amp;user=three</div>
+          <button class="copy" data-url="https://ff-dm-prod.execution.eu20-prod.web.dmc.cloud.sap/cp.portal/site#DMEOrderPOD-Display?POD_ID=1010_DEFAULT_ORDER_POD_HU&amp;/?=&amp;WORKCENTER=L1HU&amp;SFCSTATUS=401,403,402&amp;user=three">Copy</button>
+        </div>
+      </a>
+
+      <!-- Paste the rest of your tiles here from pod.html … -->
+    </div>
+  </section>
+
+  <div class="divider"></div>
+  <!-- (More sections with your tiles as in pod.html) -->
+
+</main>
+
+<script>
+/* ------- original helpers (search, toggles, clipboard) ------- */
+(function(){
+  const q=document.getElementById("q");
+  q.addEventListener("input",()=>{
+    const n=q.value.toLowerCase().trim();
+    document.querySelectorAll(".tile").forEach(t=>{
+      const h=t.dataset.hay||"";
+      t.style.display=(!n||h.includes(n))?"":"none";
+    });
+    document.querySelectorAll(".line").forEach(line=>{
+      const v=Array.from(line.querySelectorAll(".tile")).some(t=>t.style.display!=="none");
+      line.style.display=v?"":"none";
+    });
+  });
+  document.getElementById("switchDetails").addEventListener("change",e=>document.getElementById("showdetails").checked=e.target.checked);
+  document.getElementById("switchUrls").addEventListener("change",e=>document.getElementById("showurls").checked=e.target.checked);
+  document.addEventListener("click",async(e)=>{
+    if(e.target&&e.target.matches("button.copy")){
+      const url=e.target.getAttribute("data-url")||"";
+      try{
+        await navigator.clipboard.writeText(url);
+        const old=e.target.textContent;e.target.textContent="Copied!";
+        setTimeout(()=>e.target.textContent=old,800);
+      }catch(err){console.warn("Clipboard copy failed",err);}
+    }
+  });
+})();
+
+/* ---------------- Web NFC POC additions ---------------- */
+const nfcBadge = document.getElementById('nfcBadge');
+
+function setBadge(state, msg){
+  nfcBadge.textContent = "NFC: " + (msg || state);
+  nfcBadge.classList.remove('ok','warn','err');
+  if(state === 'granted') nfcBadge.classList.add('ok');
+  else if(state === 'denied') nfcBadge.classList.add('err');
+  else nfcBadge.classList.add('warn');
+}
+
+async function initNfcBadge(){
+  if(!('NDEFReader' in window)){ setBadge('denied','unsupported'); return; }
+  if(navigator.permissions?.query){
+    try{
+      const s = await navigator.permissions.query({name:'nfc'});
+      setBadge(s.state);
+      s.onchange = () => setBadge(s.state);
+    }catch{ setBadge('prompt'); }
+  }else{
+    setBadge('prompt');
+  }
+}
+
+async function writeTextToTag(txt, statusEl){
+  if(!('NDEFReader' in window)){
+    statusEl.textContent = "❌ Web NFC unsupported in this context";
+    setBadge('denied','unsupported');
+    return;
+  }
+  try{
+    const ndef = new NDEFReader();
+    await ndef.write({ records: [{ recordType:"text", data: txt, lang:"en" }] });
+    statusEl.textContent = "✅ Wrote: \"" + txt + "\"";
+  }catch(e){
+    statusEl.textContent = "❌ " + (e.message || e);
+  }
+}
+
+/* Inject a Write NFC row into every tile (appears when details are shown) */
+function injectNfcButtons(){
+  document.querySelectorAll('.tile').forEach(tile=>{
+    // avoid duplicates
+    if(tile.querySelector('.nfcrow')) return;
+    const title = (tile.querySelector('.t-name')?.textContent || '').trim();
+    const row = document.createElement('div');
+    row.className = 'nfcrow row';
+
+    const btn = document.createElement('button');
+    btn.className = 'nfcbtn';
+    btn.type = 'button';
+    btn.textContent = 'Write NFC';
+    btn.title = 'Write tag with: ' + title;
+
+    const status = document.createElement('span');
+    status.className = 'nfcstatus';
+    status.textContent = '';
+
+    btn.addEventListener('click', async (ev)=>{
+      // don’t trigger the tile navigation
+      ev.preventDefault();
+      ev.stopPropagation();
+      status.textContent = '⏳ Tap a tag…';
+      await writeTextToTag(title, status);
+    });
+
+    row.appendChild(btn);
+    row.appendChild(status);
+    tile.appendChild(row);
+  });
+}
+
+/* Prevent tile navigation when clicking inside .nfcrow */
+document.addEventListener('click', (ev)=>{
+  if(ev.target && (ev.target.closest('.nfcrow') || ev.target.classList?.contains('nfcbtn'))){
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+}, true);
+
+/* Kick off */
+injectNfcButtons();
+initNfcBadge();
+</script>
+</body>
+</html>
