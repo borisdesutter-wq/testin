@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>NFC Writer – Factory Pods</title>
+<style>
+body{background:#0b0f14;color:#e6eef6;font-family:system-ui;margin:0}
+header{position:sticky;top:0;background:#0b0f14ee;padding:10px;border-bottom:1px solid #1e2a38}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type="search"]{flex:1;height:40px;border-radius:10px;border:1px solid #2a3a4f;background:#111825;color:#e6eef6;padding:0 10px}
+.line{margin:12px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+.tile{display:flex;flex-direction:column;justify-content:center;min-height:88px;background:#131a22;border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.35);padding:12px;color:#e6eef6;text-decoration:none;cursor:pointer;transition:transform .08s}
+.tile:active{transform:scale(.97)}
+.t-name{font-size:18px;font-weight:800;text-align:center}
+.toast{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:#111825;padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.1);font-size:14px;opacity:0;transition:opacity .3s}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header class="row">
+  <input id="q" type="search" placeholder="Zoeken…" autocomplete="off">
+</header>
+
+<main class="line"><div class="grid">
+    <a class="tile"><span class="t-name">L1 - Input wedge line down</span></a>
+    <a class="tile"><span class="t-name">L1 - Input wedge line up</span></a>
+    <a class="tile"><span class="t-name">L1 - Wedge line</span></a>
+    <a class="tile"><span class="t-name">L1 - Palletizing</span></a>
+    <a class="tile"><span class="t-name">L2 - Input slicer down</span></a>
+    <a class="tile"><span class="t-name">L2 - Input slicer up</span></a>
+    <a class="tile"><span class="t-name">L2 - Slicing line</span></a>
+    <a class="tile"><span class="t-name">L2 - Palletizing</span></a>
+    <a class="tile"><span class="t-name">L4 - Input slicer down</span></a>
+    <a class="tile"><span class="t-name">L4 - Input slicer up</span></a>
+    <a class="tile"><span class="t-name">L4 - Slicing line</span></a>
+    <a class="tile"><span class="t-name">L4 - Palletizing</span></a>
+    <a class="tile"><span class="t-name">L5 - Input grate line down</span></a>
+    <a class="tile"><span class="t-name">L5 - Input grate line up</span></a>
+    <a class="tile"><span class="t-name">L5 - Grate line</span></a>
+    <a class="tile"><span class="t-name">L5 - Palletizing</span></a>
+    <a class="tile"><span class="t-name">L6 - Input grate line down</span></a>
+    <a class="tile"><span class="t-name">L6 - Input grate line up</span></a>
+    <a class="tile"><span class="t-name">L6 - Grate line</span></a>
+    <a class="tile"><span class="t-name">L6 - Palletizing</span></a>
+    <a class="tile"><span class="t-name">Standalone PODe</span></a>
+    <a class="tile"><span class="t-name">L7 - Input grate line down</span></a>
+    <a class="tile"><span class="t-name">L7 - Input grate line up</span></a>
+    <a class="tile"><span class="t-name">L7 - Grate line</span></a>
+    <a class="tile"><span class="t-name">L7 - Palletizing</span></a>
+    <a class="tile"><span class="t-name">L8 - Input apero down</span></a>
+    <a class="tile"><span class="t-name">L8 - Input apero up</span></a>
+    <a class="tile"><span class="t-name">L8 - Apero line</span></a>
+    <a class="tile"><span class="t-name">L8 - Palletizing</span></a>
+    <a class="tile"><span class="t-name">L9 - Input 9 apero line up</span></a>
+    <a class="tile"><span class="t-name">L9 - Apero line</span></a>
+    <a class="tile"><span class="t-name">L9 - Palletizing</span></a>
+    <a class="tile"><span class="t-name">P1 - Derinder wheels</span></a>
+    <a class="tile"><span class="t-name">P2 - Derinder wheels</span></a>
+    <a class="tile"><span class="t-name">P3 - Manual derinder</span></a>
+    <a class="tile"><span class="t-name">P4 - Manual derinder</span></a>
+    <a class="tile"><span class="t-name">P5 - Guillotine</span></a>
+    <a class="tile"><span class="t-name">P6 - Vacuum packer</span></a>
+    <a class="tile"><span class="t-name">/</span></a>
+    <a class="tile"><span class="t-name">/</span></a>
+    <a class="tile"><span class="t-name">Standalone POD</span></a>
+    <a class="tile"><span class="t-name">C3 - Block cutting</span></a>
+    <a class="tile"><span class="t-name">C3 - Input block cutting down</span></a>
+    <a class="tile"><span class="t-name">Teamleader</span></a>
+</div></main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._hide); t._hide=setTimeout(()=>t.classList.remove('show'),2500);
+}
+document.getElementById('q').addEventListener('input',e=>{
+  const val=e.target.value.toLowerCase().trim();
+  document.querySelectorAll('.tile').forEach(tile=>{
+    const name=tile.textContent.toLowerCase();
+    tile.style.display=(!val||name.includes(val))?'':'none';
+  });
+});
+async function writeNfc(text){
+  if(!('NDEFReader'in window)){showToast('❌ Web NFC not supported');return;}
+  try{
+    const ndef=new NDEFReader();
+    showToast('⏳ Tap a tag…');
+    await ndef.write({records:[{recordType:"text",data:text,lang:"en"}]});
+    showToast('✅ Wrote "'+text+'"');
+  }catch(e){showToast('❌ '+(e.message||e));}
+}
+document.querySelectorAll('.tile').forEach(tile=>{
+  tile.addEventListener('click',ev=>{
+    ev.preventDefault(); ev.stopPropagation();
+    const name=(tile.querySelector('.t-name')?.textContent||'').trim();
+    if(name) writeNfc(name);
+  });
+});
+</script>
+</body>
+</html>
