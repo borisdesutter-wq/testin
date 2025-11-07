@@ -1,0 +1,92 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web NFC — Writer + Scanner Lite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body{font-family:system-ui,sans-serif;margin:1.5rem;max-width:780px}
+  .row{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
+  button{padding:.6rem 1rem;border:1px solid #ccc;border-radius:.6rem}
+  input{padding:.6rem 1rem;border:1px solid #ccc;border-radius:.6rem;min-width:220px}
+  #log{white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:.6rem;margin-top:1rem;min-height:10rem}
+  .warn{color:#b00;font-weight:600}
+</style>
+
+<h1>Web NFC — Writer + Scanner Lite</h1>
+
+<div class="row">
+  <button id="scan">Scan</button>
+  <button id="writeHello">Write “Hello world!”</button>
+</div>
+
+<div class="row">
+  <!-- quick presets; edit/add as you like -->
+  <button class="preset">L4 - Palletizing</button>
+  <button class="preset">L4 - Slicing</button>
+  <button class="preset">L4 - Packaging</button>
+</div>
+
+<div class="row">
+  <input id="customText" placeholder="Custom text (e.g., L4 - Palletizing)">
+  <button id="writeCustom">Write custom</button>
+</div>
+
+<p class="warn">⚠️ Avoid “Make read-only” unless you’re 100% sure — it’s permanent.</p>
+
+<pre id="log"></pre>
+
+<script>
+const $ = s => document.querySelector(s);
+const log = m => ($("#log").textContent += m + "\n");
+const ensure = () => {
+  if (!("NDEFReader" in window)) { log("❌ Web NFC not available. Use Chrome on Android, top-level, HTTPS (or http://localhost)."); return false; }
+  return true;
+};
+
+(async () => {
+  log("UA: " + navigator.userAgent);
+  if ("permissions" in navigator && navigator.permissions.query) {
+    try {
+      const s = await navigator.permissions.query({ name: "nfc" });
+      log("Permission: " + s.state);
+      s.onchange = () => log("Permission changed: " + s.state);
+    } catch(_) {}
+  }
+})();
+
+$("#scan").addEventListener("click", async () => {
+  if (!ensure()) return;
+  try {
+    const ndef = new NDEFReader();
+    await ndef.scan();
+    log("🔎 Scan started — tap a tag…");
+    ndef.addEventListener("readingerror", () => log("Argh! Cannot read data from this tag."));
+    ndef.addEventListener("reading", ({ message, serialNumber }) => {
+      log("> Serial: " + serialNumber);
+      log("> Records: (" + message.records.length + ")");
+      // show first text record if present
+      const r = message.records[0];
+      if (r?.recordType === "text") log("> Text: " + r.data);
+    });
+  } catch (e) { log("❌ " + (e.message || e)); }
+});
+
+async function writeText(txt) {
+  if (!ensure()) return;
+  try {
+    const ndef = new NDEFReader();
+    await ndef.write({ records: [{ recordType: "text", data: txt, lang: "en" }] });
+    log("✅ Wrote Text record: \"" + txt + "\"");
+  } catch (e) { log("❌ " + (e.message || e)); }
+}
+
+$("#writeHello").addEventListener("click", () => writeText("Hello world!"));
+$("#writeCustom").addEventListener("click", () => {
+  const v = $("#customText").value.trim();
+  if (!v) return log("Enter some text first.");
+  writeText(v);
+});
+
+document.querySelectorAll(".preset").forEach(btn => {
+  btn.addEventListener("click", () => writeText(btn.textContent));
+});
+</script>
