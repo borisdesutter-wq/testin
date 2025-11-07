@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web NFC — Hello World demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body{font-family:system-ui,sans-serif;margin:1.5rem;max-width:780px}
+  button{padding:.6rem 1rem;margin:.25rem .5rem .25rem 0;border:1px solid #ccc;border-radius:.6rem}
+  #log{white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:.6rem;margin-top:1rem;min-height:8rem}
+  .warn{color:#b00;font-weight:600}
+</style>
+
+<p>
+  <button id="scanButton">Scan</button>
+  <button id="writeButton">Write “Hello world!”</button>
+  <button id="makeReadOnlyButton" class="warn" title="Irreversible">Make Read-Only</button>
+</p>
+<pre id="log"></pre>
+
+<script>
+const log=m=>document.getElementById('log').textContent+=m+"\n";
+const scanButton=document.getElementById('scanButton');
+const writeButton=document.getElementById('writeButton');
+const makeReadOnlyButton=document.getElementById('makeReadOnlyButton');
+
+if(!('NDEFReader'in window)){
+  log('Web NFC not supported. Use Chrome on Android, top-level, and HTTPS.');
+}
+
+scanButton.addEventListener("click", async () => {
+  log("User clicked scan");
+  try {
+    const ndef=new NDEFReader();
+    await ndef.scan();
+    log("> Scan started (tap a tag)");
+    ndef.addEventListener("readingerror",()=>log("Argh! Cannot read this tag."));
+    ndef.addEventListener("reading",({message,serialNumber})=>{
+      log(`> Serial: ${serialNumber}`);
+      log(`> Records: (${message.records.length})`);
+      const r=message.records[0];
+      if(r?.recordType==="text") log("> Text: "+r.data);
+    });
+  } catch (e) { log("Argh! "+(e.message||e)); }
+});
+
+writeButton.addEventListener("click", async () => {
+  log("User clicked write");
+  try { const ndef=new NDEFReader(); await ndef.write("Hello world!"); log("> Message written"); }
+  catch (e) { log("Argh! "+(e.message||e)); }
+});
+
+makeReadOnlyButton.addEventListener("click", async () => {
+  log("User clicked make read-only");
+  try { const ndef=new NDEFReader(); await ndef.makeReadOnly(); log("> Tag is now permanently read-only"); }
+  catch (e) { log("Argh! "+(e.message||e)); }
+});
+</script>
