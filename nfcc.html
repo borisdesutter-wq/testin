@@ -1,1 +1,163 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>NFC Writer Dashboard</title><style>:root{--bg:#0b0c10;--card:#151821;--text:#e8eef7;--muted:#a9b3c9;}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);}header{padding:14px 18px;border-bottom:1px solid #222735;display:flex;gap:12px;align-items:center;}header h1{font-size:18px;margin:0;font-weight:600;}#status{margin-left:auto;color:var(--muted);font-size:13px;}main{padding:18px;}.group{margin-bottom:22px;}.group h2{font-size:17px;font-weight:600;margin:6px 0 10px 4px;color:var(--muted);}.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));}.tile{background:linear-gradient(180deg,#161a24,#131720);border:1px solid #23283a;border-radius:14px;padding:14px;min-height:72px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:transform .05s ease,border-color .15s ease;}.tile:hover{transform:translateY(-1px);border-color:#3a4157;}.tile span{font-size:15px;font-weight:600;}footer{padding:10px 18px;border-top:1px solid #222735;color:var(--muted);font-size:12px;}</style></head><body><header><h1>NFC Writer Dashboard</h1><div id="status">Ready</div></header><main><section class="group"><h2>L1</h2><div class="grid"><div class="tile"><span>L1 - Input wedge line down</span></div><div class="tile"><span>L1 - Input wedge line up</span></div><div class="tile"><span>L1 - Wedge line</span></div><div class="tile"><span>L1 - Palletizing</span></div></div></section><section class="group"><h2>L2</h2><div class="grid"><div class="tile"><span>L2 - Input slicer down</span></div><div class="tile"><span>L2 - Input slicer up</span></div><div class="tile"><span>L2 - Slicing line</span></div><div class="tile"><span>L2 - Palletizing</span></div></div></section><section class="group"><h2>L3</h2><div class="grid"><div class="tile"><span>C3 - Block cutting</span></div><div class="tile"><span>C3 - Input block cutting down</span></div></div></section><section class="group"><h2>L4</h2><div class="grid"><div class="tile"><span>L4 - Input slicer down</span></div><div class="tile"><span>L4 - Input slicer up</span></div><div class="tile"><span>L4 - Slicing line</span></div><div class="tile"><span>L4 - Palletizing</span></div></div></section><section class="group"><h2>L5</h2><div class="grid"><div class="tile"><span>L5 - Input grate line down</span></div><div class="tile"><span>L5 - Input grate line up</span></div><div class="tile"><span>L5 - Grate line</span></div><div class="tile"><span>L5 - Palletizing</span></div></div></section><section class="group"><h2>L6</h2><div class="grid"><div class="tile"><span>L6 - Input grate line down</span></div><div class="tile"><span>L6 - Input grate line up</span></div><div class="tile"><span>L6 - Grate line</span></div><div class="tile"><span>L6 - Palletizing</span></div></div></section><section class="group"><h2>L7</h2><div class="grid"><div class="tile"><span>L7 - Input grate line down</span></div><div class="tile"><span>L7 - Input grate line up</span></div><div class="tile"><span>L7 - Grate line</span></div><div class="tile"><span>L7 - Palletizing</span></div></div></section><section class="group"><h2>L8</h2><div class="grid"><div class="tile"><span>L8 - Input apero down</span></div><div class="tile"><span>L8 - Input apero up</span></div><div class="tile"><span>L8 - Apero line</span></div><div class="tile"><span>L8 - Palletizing</span></div></div></section><section class="group"><h2>L9</h2><div class="grid"><div class="tile"><span>L9 - Input 9 apero line up</span></div><div class="tile"><span>L9 - Apero line</span></div><div class="tile"><span>L9 - Palletizing</span></div></div></section><section class="group"><h2>ONTKORSTER</h2><div class="grid"><div class="tile"><span>P1 - Derinder wheels</span></div><div class="tile"><span>P2 - Derinder wheels</span></div><div class="tile"><span>P3 - Manual derinder</span></div><div class="tile"><span>P4 - Manual derinder</span></div><div class="tile"><span>P5 - Guillotine</span></div><div class="tile"><span>P6 - Vacuum packer</span></div></div></section><section class="group"><h2>OTHER</h2><div class="grid"><div class="tile"><span>Standalone POD</span></div><div class="tile"><span>Standalone POD</span></div><div class="tile"><span>Teamleader</span></div></div></section></main><footer>Tap a tile → touch a tag. Writes tile name as TEXT NDEF.</footer><script>const statusEl=document.getElementById("status");async function writePayload(t){try{if("NDEFWriter" in window){const w=new NDEFWriter();statusEl.textContent="Touch tag for \\"" + t + "\\"…";await w.write({records:[{recordType:"text",data:t}]});statusEl.textContent="✅ " + t;return;}if(navigator.nfc && navigator.nfc.write){statusEl.textContent="Touch tag for \\"" + t + "\\"…";await navigator.nfc.write({records:[{recordType:"text",data:t}]});statusEl.textContent="✅ " + t;return;}await navigator.clipboard.writeText(t);alert("Web NFC not available. Copied to clipboard: " + t);}catch(e){console.error(e);statusEl.textContent="❌ " + (e.message||e);}}document.querySelectorAll(".tile").forEach(el=>el.addEventListener("click",()=>writePayload(el.textContent.trim())));</script></body></html>
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>NFC Writer Dashboard – Grouped (Reader API)</title>
+<style>
+:root{--bg:#0b0c10;--card:#151821;--text:#e8eef7;--muted:#a9b3c9;}
+html,body{margin:0;height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+body{background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+header{padding:10px 14px;border-bottom:1px solid #222735;display:flex;gap:8px;align-items:center;background:#0b0f14ee}
+header h1{font-size:18px;margin:0;font-weight:600}
+input[type="search"]{margin-left:auto;height:36px;border-radius:999px;border:1px solid #2a3444;background:#111825;color:var(--text);padding:0 10px;font-size:13px;min-width:120px}
+main{padding:18px;flex:1;overflow:auto}
+.group{margin-bottom:22px}
+.group h2{font-size:16px;font-weight:600;margin:4px 2px 10px;color:var(--muted);text-transform:uppercase}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.tile{background:linear-gradient(180deg,#161a24,#131720);border:1px solid #23283a;border-radius:14px;padding:14px;min-height:72px;
+      display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:transform .06s ease,border-color .15s ease;
+      box-shadow:0 6px 18px rgba(0,0,0,.35);}
+.tile:hover{transform:translateY(-1px);border-color:#3a4157}
+.tile:active{transform:scale(.97)}
+.tile span{font-size:15px;font-weight:600}
+footer{padding:8px 14px;border-top:1px solid #222735;color:var(--muted);font-size:12px;background:#05070c}
+.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#111825;padding:8px 16px;border-radius:8px;
+       border:1px solid rgba(255,255,255,.15);font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>NFC Writer Dashboard</h1>
+  <input id="q" type="search" placeholder="Filter…" autocomplete="off">
+</header>
+<main id="main">
+  <!-- same content as nfcc.html, just wrapped in sections -->
+  <section class="group"><h2>L1</h2><div class="grid">
+    <div class="tile"><span>L1 - Input wedge line down</span></div>
+    <div class="tile"><span>L1 - Input wedge line up</span></div>
+    <div class="tile"><span>L1 - Wedge line</span></div>
+    <div class="tile"><span>L1 - Palletizing</span></div>
+  </div></section>
+
+  <section class="group"><h2>L2</h2><div class="grid">
+    <div class="tile"><span>L2 - Input slicer down</span></div>
+    <div class="tile"><span>L2 - Input slicer up</span></div>
+    <div class="tile"><span>L2 - Slicing line</span></div>
+    <div class="tile"><span>L2 - Palletizing</span></div>
+  </div></section>
+
+  <section class="group"><h2>L3</h2><div class="grid">
+    <div class="tile"><span>C3 - Block cutting</span></div>
+    <div class="tile"><span>C3 - Input block cutting down</span></div>
+  </div></section>
+
+  <section class="group"><h2>L4</h2><div class="grid">
+    <div class="tile"><span>L4 - Input slicer down</span></div>
+    <div class="tile"><span>L4 - Input slicer up</span></div>
+    <div class="tile"><span>L4 - Slicing line</span></div>
+    <div class="tile"><span>L4 - Palletizing</span></div>
+  </div></section>
+
+  <section class="group"><h2>L5</h2><div class="grid">
+    <div class="tile"><span>L5 - Input grate line down</span></div>
+    <div class="tile"><span>L5 - Input grate line up</span></div>
+    <div class="tile"><span>L5 - Grate line</span></div>
+    <div class="tile"><span>L5 - Palletizing</span></div>
+  </div></section>
+
+  <section class="group"><h2>L6</h2><div class="grid">
+    <div class="tile"><span>L6 - Input grate line down</span></div>
+    <div class="tile"><span>L6 - Input grate line up</span></div>
+    <div class="tile"><span>L6 - Grate line</span></div>
+    <div class="tile"><span>L6 - Palletizing</span></div>
+  </div></section>
+
+  <section class="group"><h2>L7</h2><div class="grid">
+    <div class="tile"><span>L7 - Input grate line down</span></div>
+    <div class="tile"><span>L7 - Input grate line up</span></div>
+    <div class="tile"><span>L7 - Grate line</span></div>
+    <div class="tile"><span>L7 - Palletizing</span></div>
+  </div></section>
+
+  <section class="group"><h2>L8</h2><div class="grid">
+    <div class="tile"><span>L8 - Input apero down</span></div>
+    <div class="tile"><span>L8 - Input apero up</span></div>
+    <div class="tile"><span>L8 - Apero line</span></div>
+    <div class="tile"><span>L8 - Palletizing</span></div>
+  </div></section>
+
+  <section class="group"><h2>L9</h2><div class="grid">
+    <div class="tile"><span>L9 - Input 9 apero line up</span></div>
+    <div class="tile"><span>L9 - Apero line</span></div>
+    <div class="tile"><span>L9 - Palletizing</span></div>
+  </div></section>
+
+  <section class="group"><h2>ONTKORSTER</h2><div class="grid">
+    <div class="tile"><span>P1 - Derinder wheels</span></div>
+    <div class="tile"><span>P2 - Derinder wheels</span></div>
+    <div class="tile"><span>P3 - Manual derinder</span></div>
+    <div class="tile"><span>P4 - Manual derinder</span></div>
+    <div class="tile"><span>P5 - Guillotine</span></div>
+    <div class="tile"><span>P6 - Vacuum packer</span></div>
+  </div></section>
+
+  <section class="group"><h2>OTHER</h2><div class="grid">
+    <div class="tile"><span>Standalone POD</span></div>
+    <div class="tile"><span>Standalone POD</span></div>
+    <div class="tile"><span>Teamleader</span></div>
+  </div></section>
+</main>
+
+<footer>Tap een tegel → houd een tag tegen de ET60. De tegeltekst wordt als TEXT NDEF geschreven.</footer>
+<div id="toast" class="toast"></div>
+
+<script>
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._hide);
+  t._hide = setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+document.getElementById('q').addEventListener('input', e => {
+  const val = e.target.value.toLowerCase().trim();
+  document.querySelectorAll('.group').forEach(group => {
+    let visibleInGroup = false;
+    group.querySelectorAll('.tile').forEach(tile => {
+      const name = tile.textContent.toLowerCase();
+      const match = !val || name.includes(val);
+      tile.style.display = match ? '' : 'none';
+      if (match) visibleInGroup = true;
+    });
+    group.style.display = visibleInGroup ? '' : 'none';
+  });
+});
+
+async function writeNfc(text){
+  if (!('NDEFReader' in window)){
+    showToast('❌ Web NFC niet ondersteund');
+    return;
+  }
+  try {
+    const ndef = new NDEFReader();
+    showToast('⏳ Tag aanraken…');
+    await ndef.write({records:[{recordType:"text",data:text,lang:"en"}]});
+    showToast('✅ Geschreven: "'+text+'"');
+  } catch (e){
+    showToast('❌ '+(e.message || e));
+  }
+}
+
+document.querySelectorAll('.tile').forEach(tile => {
+  tile.addEventListener('click', ev => {
+    ev.preventDefault();
+    const text = tile.textContent.trim();
+    if (text) writeNfc(text);
+  });
+});
+</script>
+</body>
+</html>
