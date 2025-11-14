@@ -4,32 +4,36 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Relay</title>
 <script>
-(() => {
-  const p = new URLSearchParams(location.search);
-  const t = (p.get('target') || '').trim();
-  if (!t) return;
+(()=> {
+  const p = new URLSearchParams(location.search);
+  const user = (p.get('user') || p.get('u') || '').toLowerCase();
+  const t = (p.get('target') || '').trim();
 
-  let url;
-  if (/^https?:\/\//i.test(t)) {
-    // Direct URL target
-    url = t;
-  } else {
-    // Tile name → hand over to pod.html, which takes care of user + URL mapping
-    url = 'pod.html?tile=' + encodeURIComponent(t);
-  }
+  if (user) { try { window.name = 'user=' + user; } catch(e){} }
+  if (!t) return;
 
-  const nav = () => {
-    try {
-      if (typeof View !== 'undefined' && typeof View.navigate === 'function') {
-        View.navigate(url);
-      } else {
-        location.replace(url);
-      }
-    } catch(e) {
-      location.replace(url);
-    }
-  };
-  setTimeout(nav, 10);
+  let url;
+  if (/^https?:\/\//i.test(t)) {
+    if (user) {
+      const i = t.indexOf('#');
+      const base = i >= 0 ? t.slice(0,i) : t;
+      const hash = i >= 0 ? t.slice(i) : '';
+      const sep = base.includes('?') ? '&' : '?';
+      url = base + sep + 'vl_user=' + encodeURIComponent(user) + hash;
+    } else {
+      url = t;
+    }
+  } else {
+    url = 'pod.html?tile=' + encodeURIComponent(t) + (user ? '&u=' + encodeURIComponent(user) : '');
+  }
+
+  const nav = () => {
+    try {
+      if (typeof View !== 'undefined' && typeof View.navigate === 'function') View.navigate(url);
+      else location.replace(url);
+    } catch(e) { location.replace(url); }
+  };
+  setTimeout(nav, 10); // tiny delay so window.name is readable on next page
 })();
 </script>
 </html>
