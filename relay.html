@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Relay</title>
+<script>
+(() => {
+  const p = new URLSearchParams(location.search);
+  const t = (p.get('target') || '').trim();
+  if (!t) return;
+
+  let url;
+  if (/^https?:\/\//i.test(t)) {
+    // Direct URL target
+    url = t;
+  } else {
+    // Tile name → hand over to pod.html, which takes care of user + URL mapping
+    url = 'pod.html?tile=' + encodeURIComponent(t);
+  }
+
+  const nav = () => {
+    try {
+      if (typeof View !== 'undefined' && typeof View.navigate === 'function') {
+        View.navigate(url);
+      } else {
+        location.replace(url);
+      }
+    } catch(e) {
+      location.replace(url);
+    }
+  };
+  setTimeout(nav, 10);
+})();
+</script>
+</html>
